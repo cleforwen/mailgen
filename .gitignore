@@ -1,0 +1,27 @@
+# Swift / Xcode
+.build/
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+*.xccheckout
+*.xcscmblueprint
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# SPM
+.swiftpm/
+.package.resolved
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+*.app/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
