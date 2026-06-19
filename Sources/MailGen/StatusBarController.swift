@@ -12,6 +12,8 @@ class StatusBarController: NSObject {
     private let domains    = ["gmail.com", "outlook.com", "yahoo.com", "icloud.com",
                                "protonmail.com", "acme-corp.com", "nexustech.net", "fastmail.com"]
 
+    private var usedEmails = Set<String>()
+
     override init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         super.init()
@@ -50,11 +52,20 @@ class StatusBarController: NSObject {
     }
 
     private func generate() -> String {
-        let first = firstNames.randomElement()!
-        let last  = lastNames.randomElement()!
-        let domain = domains.randomElement()!
-        let styles = ["\(first).\(last)", "\(first)\(last)", "\(first.prefix(1)).\(last)", "\(first)"]
-        return "\(styles.randomElement()!)@\(domain)"
+        let totalCombinations = firstNames.count * lastNames.count * domains.count * 4
+        if usedEmails.count >= totalCombinations { usedEmails.removeAll() }
+
+        var candidate: String
+        repeat {
+            let first = firstNames.randomElement()!
+            let last  = lastNames.randomElement()!
+            let domain = domains.randomElement()!
+            let styles = ["\(first).\(last)", "\(first)\(last)", "\(first.prefix(1)).\(last)", "\(first)"]
+            candidate = "\(styles.randomElement()!)@\(domain)"
+        } while usedEmails.contains(candidate)
+
+        usedEmails.insert(candidate)
+        return candidate
     }
 
     private func styledEmail(_ address: String) -> NSAttributedString {
