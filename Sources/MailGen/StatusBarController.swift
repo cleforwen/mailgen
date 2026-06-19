@@ -1,22 +1,35 @@
 import AppKit
 
+// Paste your gist's raw URL here (the URL ending in /raw/names.json)
+private let namesGistURL = "https://gist.githubusercontent.com/cleforwen/df9835d5558178c2c01cfbb494d42024/raw/609564c6c761b29fcc63048b5efec348df96d012/gistfile1.txt"
+
+private struct NameList: Decodable {
+    let firstNames: [String]
+    let lastNames: [String]
+}
+
 class StatusBarController: NSObject {
     private var statusItem: NSStatusItem
     private var emailItem = NSMenuItem()
 
-    private let firstNames = ["alice", "bob", "carlos", "diana", "ethan", "fatima",
-                               "george", "hiroshi", "isabel", "james", "kavya", "liam",
-                               "maria", "nadia", "oliver", "priya", "rachel", "samuel"]
-    private let lastNames  = ["johnson", "patel", "wu", "martinez", "okafor", "kim",
-                               "andersen", "nguyen", "garcia", "rossi", "singh", "taylor"]
-    private let domains    = ["gmail.com", "outlook.com", "yahoo.com", "icloud.com",
-                               "protonmail.com", "acme-corp.com", "nexustech.net", "fastmail.com"]
+    private let defaultFirstNames = ["alice", "bob", "carlos", "diana", "ethan", "fatima",
+                                     "george", "hiroshi", "isabel", "james", "kavya", "liam",
+                                     "maria", "nadia", "oliver", "priya", "rachel", "samuel"]
+    private let defaultLastNames  = ["johnson", "patel", "wu", "martinez", "okafor", "kim",
+                                     "andersen", "nguyen", "garcia", "rossi", "singh", "taylor"]
+    private let domains           = ["gmail.com", "outlook.com", "yahoo.com", "icloud.com",
+                                     "protonmail.com", "acme-corp.com", "nexustech.net", "fastmail.com"]
 
+    private var firstNames: [String] = []
+    private var lastNames: [String]  = []
     private var usedEmails = Set<String>()
 
     override init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         super.init()
+
+        firstNames = defaultFirstNames
+        lastNames  = defaultLastNames
 
         if let button = statusItem.button {
             let img = NSImage(systemSymbolName: "envelope.fill", accessibilityDescription: "MailGen")
@@ -25,6 +38,22 @@ class StatusBarController: NSObject {
         }
 
         buildMenu()
+        fetchRemoteNames()
+    }
+
+    private func fetchRemoteNames() {
+        guard let url = URL(string: namesGistURL) else { return }
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard let self, let data,
+                  let list = try? JSONDecoder().decode(NameList.self, from: data),
+                  !list.firstNames.isEmpty, !list.lastNames.isEmpty
+            else { return }
+            DispatchQueue.main.async {
+                self.firstNames = list.firstNames
+                self.lastNames  = list.lastNames
+                self.usedEmails.removeAll()
+            }
+        }.resume()
     }
 
     private func buildMenu() {
